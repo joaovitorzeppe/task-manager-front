@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
 import DataTable from '../components/DataTable';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchTasks } from '../services/api';
+import { fetchTasks } from '../services/tasks';
 import type { Task } from '../types/task';
 
 const Tasks: React.FC = () => {
@@ -41,7 +41,7 @@ const Tasks: React.FC = () => {
           return map[p];
         }
       },
-      { header: 'Entrega', accessorKey: 'dueDate', cell: ({ row }) => row.original.dueDate ? new Date(row.original.dueDate).toLocaleDateString() : '-' },
+      { header: 'Entrega', accessorKey: 'dueDate', cell: ({ row }) => row.original.dueDate ? new Date(row.original.dueDate).toLocaleDateString() : '-', sortingFn: 'datetime' },
       { header: 'Projeto', accessorKey: 'project.name', cell: ({ row }) => row.original.project?.name ?? '-' },
       { header: 'Responsável', accessorKey: 'assignee.name', cell: ({ row }) => row.original.assignee?.name ?? '-' },
     ],

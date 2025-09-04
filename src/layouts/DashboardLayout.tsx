@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import navigation from '../routes/navigation';
 
 const DashboardLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -30,30 +31,19 @@ const DashboardLayout: React.FC = () => {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
-          <NavLink
-            to="/dashboard/users"
-            className={({ isActive }) =>
-              `rounded px-3 py-2 text-sm ${isActive ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`
-            }
-          >
-            Usuários
-          </NavLink>
-          <NavLink
-            to="/dashboard/projects"
-            className={({ isActive }) =>
-              `rounded px-3 py-2 text-sm ${isActive ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`
-            }
-          >
-            Projetos
-          </NavLink>
-          <NavLink
-            to="/dashboard/tasks"
-            className={({ isActive }) =>
-              `rounded px-3 py-2 text-sm ${isActive ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`
-            }
-          >
-            Tarefas
-          </NavLink>
+          {navigation
+            .filter((item) => !item.roles || item.roles.includes(user?.role as any))
+            .map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `rounded px-3 py-2 text-sm ${isActive ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
 
           <div className="flex-1" />
 
