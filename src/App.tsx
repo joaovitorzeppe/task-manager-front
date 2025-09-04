@@ -1,10 +1,10 @@
 import { Route, Routes } from 'react-router-dom';
-import Login from './components/Login';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import ProtectedPage from './components/ProtectedPage';
-import HomeRedirect from './components/HomeRedirect';
-import { AuthProvider } from './contexts/AuthContext.tsx';
 import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext.tsx';
+import HomeRedirect from './components/HomeRedirect';
+import Login from './pages/Login.tsx';
+import ProtectedPage from './pages/ProtectedPage.tsx';
 
 const queryClient = new QueryClient();
 function App() {
