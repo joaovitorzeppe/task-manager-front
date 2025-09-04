@@ -4,7 +4,7 @@ import type { ColumnDef, Row } from '@tanstack/react-table';
 import DataTable from '../components/DataTable';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchUsers, deleteUser } from '../services/users';
-import type { User } from '../types/user';
+import { type User, roles } from '../types/user';
 import { useNavigate } from 'react-router-dom';
 import PencilIcon from '../assets/svgs/pencil-svgrepo-com.svg';
 import TrashIcon from '../assets/svgs/trash-svgrepo-com.svg';
@@ -32,15 +32,7 @@ const Users: React.FC = () => {
       { header: 'ID', accessorKey: 'id' },
       { header: 'Nome', accessorKey: 'name' },
       { header: 'Email', accessorKey: 'email' },
-      { header: 'Papel', accessorKey: 'role', cell: ({row}: {row: Row<User>}) => {
-        const s = row.original.role;
-          const map: Record<User['role'], string> = {
-            admin: 'Administrador',
-            manager: 'Gerente',
-            developer: 'Desenvolvedor',
-          };
-          return map[s as User['role']];
-      } },
+      { header: 'Papel', accessorKey: 'role', cell: ({row}: {row: Row<User>}) => roles[row.original.role]},
       user?.role === 'admin' ? {
         header: 'Ações',
         id: 'actions',

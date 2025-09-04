@@ -6,6 +6,8 @@ import Users from '../pages/Users';
 import Projects from '../pages/Projects';
 import Tasks from '../pages/Tasks';
 import UserForm from '../pages/UserForm';
+import ProjectForm from '../pages/ProjectForm';
+import TaskForm from '../pages/TaskForm';
 import type { User } from '../types/user';
 
 export type AppRoute = {
@@ -26,7 +28,11 @@ const routes: AppRoute[] = [
       { path: '/dashboard/users/form', element: <UserForm />, roles: ['admin'] },
       { path: '/dashboard/users/form/:id', element: <UserForm />, roles: ['admin'] },
       { path: '/dashboard/projects', element: <Projects />, roles: ['admin', 'manager'] },
+      { path: '/dashboard/projects/form', element: <ProjectForm />, roles: ['admin', 'manager'] },
+      { path: '/dashboard/projects/form/:id', element: <ProjectForm />, roles: ['admin', 'manager'] },
       { path: '/dashboard/tasks', element: <Tasks /> },
+      { path: '/dashboard/tasks/form', element: <TaskForm />, roles: ['admin', 'manager'] },
+      { path: '/dashboard/tasks/form/:id', element: <TaskForm />, roles: ['admin', 'manager'] },
     ],
   },
 ];

@@ -1,22 +1,18 @@
-import type { User } from "../types/user";
+import type { CreateUserPayload, UpdateUserPayload, User } from "../types/user";
 import { API_URL } from "./config";
 
-type CreateUserPayload = {
-  name: string;
-  email: string;
-  password: string;
-  role: User["role"];
-};
-
-type UpdateUserPayload = {
-  name?: string;
-  email?: string;
-  password?: string;
-  role?: User["role"];
-};
-
-const fetchUsers = async (token: string): Promise<User[]> => {
-  const response = await fetch(`${API_URL}/users`, {
+const fetchUsers = async (
+  token: string,
+  filters?: { role?: string; name?: string; email?: string }
+): Promise<User[]> => {
+  const params = new URLSearchParams();
+  if (filters?.role) params.set("role", filters.role);
+  if (filters?.name) params.set("name", filters.name);
+  if (filters?.email) params.set("email", filters.email);
+  const url = `${API_URL}/users${
+    params.toString() ? `?${params.toString()}` : ""
+  }`;
+  const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -108,4 +104,3 @@ const deleteUser = async (token: string, id: number): Promise<void> => {
 };
 
 export { fetchUsers, fetchUserById, createUser, updateUser, deleteUser };
-export type { CreateUserPayload, UpdateUserPayload };
