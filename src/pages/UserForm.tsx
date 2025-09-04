@@ -7,8 +7,8 @@ import InputField from '../components/InputField';
 import Button from '../components/Button';
 import FieldInfo from '../components/FieldInfo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createUser, fetchUserById, updateUser, type CreateUserPayload, type UpdateUserPayload } from '../services/users';
-import type { User } from '../types/user';
+import { createUser, fetchUserById, updateUser } from '../services/users';
+import { type User, type CreateUserPayload, type UpdateUserPayload } from '../types/user';
 
 const UserForm: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
