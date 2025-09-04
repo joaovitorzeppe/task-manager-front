@@ -3,11 +3,11 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; 
 import type { LoginDto, LoginResponse } from '../types/auth';
-// import { useForm } from '@tanstack/react-form'
-// import type { AnyFieldApi } from '@tanstack/react-form'
+
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 const loginUser = async (credentials: LoginDto): Promise<LoginResponse> => {
-  const response = await fetch('http://localhost:8080/auth/login', {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
