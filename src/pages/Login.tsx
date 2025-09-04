@@ -29,6 +29,7 @@ const Login: React.FC = () => {
     defaultValues: {
       email: '',
       password: '',
+      rememberMe: false,
     },
     onSubmit: ({value}) => {
       mutation.mutate(value);
@@ -37,6 +38,7 @@ const Login: React.FC = () => {
       onSubmit: z.object({
         email: z.email('Email deve ser válido').min(1, 'Email é obrigatório'),
         password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+        rememberMe: z.boolean(),
       }),
     },
   });
@@ -84,6 +86,24 @@ const Login: React.FC = () => {
              <FieldInfo field={field} />
              </>
              )
+            }}
+          />
+          <form.Field 
+            name="rememberMe"
+            children={(field) => {
+              return (
+                <div className="flex items-center space-x-2 py-2">
+                  <input
+                    id="rememberMe"
+                    name="rememberMe"
+                    type="checkbox"
+                    checked={!!field.state.value}
+                    onChange={(e) => field.handleChange(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="rememberMe" className="text-sm text-gray-700">Manter conectado</label>
+                </div>
+              )
             }}
           />
           <form.Subscribe

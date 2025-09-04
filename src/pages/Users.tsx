@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo} from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
 import DataTable from '../components/DataTable';
@@ -15,12 +15,20 @@ const Users: React.FC = () => {
     enabled: !!token,
   });
 
-  const columns = React.useMemo<ColumnDef<User, unknown>[]>(
+  const columns = useMemo<ColumnDef<User, unknown>[]>(
     () => [
       { header: 'ID', accessorKey: 'id' },
       { header: 'Nome', accessorKey: 'name' },
       { header: 'Email', accessorKey: 'email' },
-      { header: 'Papel', accessorKey: 'role', cell: ({row}) => row.original.role.charAt(0).toUpperCase() + row.original.role.slice(1) },
+      { header: 'Papel', accessorKey: 'role', cell: ({row}) => {
+        const s = row.original.role;
+          const map: Record<User['role'], string> = {
+            admin: 'Administrador',
+            manager: 'Gerente',
+            developer: 'Desenvolvedor',
+          };
+          return map[s];
+      } },
     ],
     []
   );
@@ -41,7 +49,6 @@ const Users: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Usuários</h1>
-        <div className="text-sm text-gray-500">{data?.length ?? 0} usuários</div>
       </div>
       <DataTable columns={columns} data={data ?? []} emptyMessage="Nenhum usuário encontrado" />
     </div>

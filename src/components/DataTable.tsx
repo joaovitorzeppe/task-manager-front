@@ -1,11 +1,13 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   useReactTable,
   type ColumnDef,
   type SortingState,
+  type PaginationState,
 } from '@tanstack/react-table';
 
 type DataTableProps<TData, TValue> = {
@@ -15,15 +17,18 @@ type DataTableProps<TData, TValue> = {
 };
 
 function DataTable<TData, TValue>({ columns, data, emptyMessage = 'Sem dados' }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -80,6 +85,53 @@ function DataTable<TData, TValue>({ columns, data, emptyMessage = 'Sem dados' }:
           )}
         </tbody>
       </table>
+      <div className="grid grid-cols-1 gap-2 px-4 py-3 sm:grid-cols-2 sm:items-center">
+        <div className="col-span-1 flex items-center gap-2 text-sm text-gray-600">
+          <span>Itens por página:</span>
+          <select
+            className="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => table.setPageSize(Number(e.target.value))}
+          >
+            {[5, 10, 20, 50].map((size) => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+          </select>
+          <span>
+            Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount() || 1}
+          </span>
+        </div>
+        <div className="col-span-1 mt-2 flex items-center gap-2 justify-start sm:mt-0 sm:justify-end">
+          <button
+            className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            «
+          </button>
+          <button
+            className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Anterior
+          </button>
+          <button
+            className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Próxima
+          </button>
+          <button
+            className="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            »
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
