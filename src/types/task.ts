@@ -9,7 +9,7 @@ export type Task = {
   priority: "low" | "medium" | "high" | "critical";
   dueDate?: string | null;
   projectId: number;
-  assigneeId: number;
+  assigneeId?: number;
   project?: Project;
   assignee?: User;
 };
@@ -21,7 +21,7 @@ export type CreateTaskPayload = {
   priority?: Task["priority"];
   dueDate?: string | null;
   projectId: number;
-  assigneeId: number;
+  assigneeId?: number;
 };
 
 export type UpdateTaskPayload = Partial<CreateTaskPayload>;

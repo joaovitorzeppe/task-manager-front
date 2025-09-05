@@ -11,6 +11,7 @@ import { createProject, fetchProjectById, updateProject } from '../services/proj
 import { fetchUsers } from '../services/users';
 import { statuses, type Project, type CreateProjectPayload, type UpdateProjectPayload } from '../types/project';
 import { type User, roles } from '../types/user';
+import dayjs from 'dayjs';
 
 const ProjectForm: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -33,8 +34,19 @@ const ProjectForm: React.FC = () => {
 
   const managers = (usersData ?? []).filter((u) => ['admin', 'manager'].includes(u.role));
 
+  const [members, setMembers] = React.useState<Array<{ userId: number; role: 'viewer' | 'contributor' | 'maintainer'; manager?: boolean }>>([]);
+  const [selectedToAdd, setSelectedToAdd] = React.useState<string>('');
+
+  const addSelectedMember = () => {
+    if (!selectedToAdd) return;
+    const userId = Number(selectedToAdd);
+    setMembers((prev) => (prev.find((m) => m.userId === userId) ? prev : [...prev, { userId, role: 'contributor' }]));
+    setSelectedToAdd('');
+  };
+
   const createMutation = useMutation<Project, Error, CreateProjectPayload>({
     mutationFn: (payload) => createProject(token as string, payload),
+    mutationKey: ['project', 'create'],
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       navigate('/dashboard/projects');
@@ -43,6 +55,7 @@ const ProjectForm: React.FC = () => {
 
   const updateMutation = useMutation<Project, Error, { id: number; payload: UpdateProjectPayload }>({
     mutationFn: ({ id, payload }) => updateProject(token as string, id, payload),
+    mutationKey: ['project', 'update'],
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       navigate('/dashboard/projects');
@@ -66,6 +79,7 @@ const ProjectForm: React.FC = () => {
         startDate: value.startDate,
         endDate: value.endDate || undefined,
         managerId: Number(value.managerId),
+        members: members.length > 0 ? members.map((m) => ({ userId: m.userId, role: m.role })) : undefined,
       } as CreateProjectPayload;
 
       if (isEdit) {
@@ -84,21 +98,29 @@ const ProjectForm: React.FC = () => {
         endDate: z.string(),
         managerId: z.string().min(1, 'Gerente é obrigatório'),
       }),
-    },
+    }
   });
 
-  React.useEffect(() => {
-    if (projectData) {
-      form.setFieldValue('name', projectData.name);
-      form.setFieldValue('description', projectData.description ?? '');
-      form.setFieldValue('status', projectData.status);
-      form.setFieldValue('startDate', projectData.startDate ? new Date(projectData.startDate).toISOString().slice(0, 10) : '');
-      form.setFieldValue('endDate', projectData.endDate ? new Date(projectData.endDate).toISOString().slice(0, 10) : '');
-      form.setFieldValue('managerId', String(projectData.managerId));
-    }
-  }, [projectData]);
+  const changeRole = (userId: number, role: 'viewer' | 'contributor' | 'maintainer') => {
+    setMembers((prev) => prev.map((m) => (m.userId === userId ? { ...m, role } : m)));
+  };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  React.useEffect(() => {
+    if (!projectData) return;
+
+    form.setFieldValue('name', projectData.name);
+    form.setFieldValue('description', projectData.description ?? '');
+    form.setFieldValue('status', projectData.status);
+    form.setFieldValue('startDate', dayjs(projectData.startDate).format('YYYY-MM-DD'));
+    form.setFieldValue('endDate', projectData.endDate ? dayjs(projectData.endDate).format('YYYY-MM-DD') : '');
+    form.setFieldValue('managerId', String(projectData.managerId));
+
+    if (projectData.members) {
+      setMembers(projectData.members.map((m) => ({ userId: m.userId, role: m.role })));
+    }
+  }, [projectData]);
 
   return (
     <div className="space-y-4">
@@ -155,7 +177,37 @@ const ProjectForm: React.FC = () => {
             <form.Field name="managerId" children={(field) => (
               <div>
                 <label htmlFor="managerId" className="block mb-2 text-sm font-medium text-gray-900">Gerente</label>
-                <select id="managerId" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" value={String(field.state.value ?? '')} onChange={(e) => field.handleChange(e.target.value)}>
+                <select
+                  id="managerId"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  value={String(field.state.value ?? '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.handleChange(val);
+                    const newManagerId = Number(val);
+                    if (newManagerId) {
+                      setMembers((prev) => {
+                        const exists = prev.find((m) => m.userId === newManagerId);
+                        const oldManager = prev.find((m) => m.manager);
+                        if (exists) {
+                          if (oldManager && oldManager?.userId !== newManagerId) {
+                            prev = prev.map((m) => (m.userId === oldManager.userId ? { ...m, role: 'contributor', manager: false } : m));
+                          }
+                          if (exists.role !== 'maintainer') {
+                            return prev.map((m) => (m.userId === newManagerId ? { ...m, role: 'maintainer', manager: true } : m));
+                          }
+                          return prev;
+                        }
+                        if (oldManager && oldManager?.userId !== newManagerId) {
+                          prev = prev.map((m) => (m.userId === oldManager.userId ? { ...m, role: 'contributor', manager: false } : m));
+                        }
+                        return [...prev, { userId: newManagerId, role: 'maintainer', manager: true }];
+                      });
+                    } else {
+                      setMembers((prev) => prev.filter((m) => !m.manager));
+                    }
+                  }}
+                >
                   <option value="">Selecione...</option>
                   {managers.map((m) => (
                     <option key={m.id} value={m.id}>{m.name} ({roles[m.role]})</option>
@@ -164,6 +216,63 @@ const ProjectForm: React.FC = () => {
                 <FieldInfo field={field} />
               </div>
             )} />
+
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900">Adicionar membro</label>
+              <div className="flex items-center gap-2">
+                <select
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5"
+                  value={selectedToAdd}
+                  onChange={(e) => setSelectedToAdd(e.target.value)}
+                >
+                  <option value="">Selecione usuário...</option>
+                  {(usersData ?? [])
+                    .filter((u) => !members.find((m) => m.userId === u.id))
+                    .filter((u) => String(u.id) !== String(form.state.values.managerId ?? ''))
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>{u.name} ({roles[u.role]})</option>
+                    ))}
+                </select>
+                <Button label="Adicionar" onClick={addSelectedMember} type="button" disabled={false} loading={false} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-900">Membros selecionados</label>
+              <div className="space-y-2">
+                {members.map((m) => {
+                  const user = (usersData ?? []).find((u) => u.id === m.userId);
+                  const isManagerMember = String(m.userId) === String(form.state.values.managerId ?? '');
+                  return (
+                    <div key={m.userId} className="flex items-center gap-3">
+                      <span className="flex-1 text-sm text-gray-900">{user ? `${user.name} (${roles[user.role]})` : `Usuário #${m.userId}`}</span>
+                      <select
+                        disabled={isManagerMember}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-1"
+                        value={m.role}
+                        onChange={(e) => changeRole(m.userId, e.target.value as any)}
+                      >
+                        <option value="viewer">Visualizador</option>
+                        <option value="contributor">Contribuidor</option>
+                        <option value="maintainer">Mantenedor</option>
+                      </select>
+                      {!isManagerMember && (
+                        <button
+                          type="button"
+                          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                          onClick={() => setMembers((prev) => prev.filter((x) => x.userId !== m.userId))}
+                        >
+                          Remover
+                        </button>
+                      )}
+                      {isManagerMember && (
+                        <span className="text-xs text-gray-500">Gerente (fixo)</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             <div className="flex items-center gap-2">
               <Button label={isEdit ? 'Salvar' : 'Criar'} onClick={() => form.handleSubmit()} type="submit" disabled={isSubmitting} loading={isSubmitting} />

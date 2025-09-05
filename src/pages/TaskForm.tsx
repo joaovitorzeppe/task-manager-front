@@ -66,15 +66,15 @@ const TaskForm: React.FC = () => {
       assigneeId: '',
     },
     onSubmit: ({ value }) => {
-      const payloadBase = {
+      const payloadBase: CreateTaskPayload = {
         title: value.title,
         description: value.description || undefined,
         status: value.status,
         priority: value.priority,
         dueDate: value.dueDate || undefined,
         projectId: Number(value.projectId),
-        assigneeId: Number(value.assigneeId),
-      } as CreateTaskPayload;
+        ...(value.assigneeId ? { assigneeId: Number(value.assigneeId) } : {}),
+      };
 
       if (isEdit) {
         const payload: UpdateTaskPayload = { ...payloadBase };
@@ -91,7 +91,7 @@ const TaskForm: React.FC = () => {
         priority: z.enum(['low', 'medium', 'high', 'critical']),
         dueDate: z.string(),
         projectId: z.string().min(1, 'Projeto é obrigatório'),
-        assigneeId: z.string().min(1, 'Responsável é obrigatório'),
+        assigneeId: z.string(),
       }),
     },
   });
@@ -104,7 +104,7 @@ const TaskForm: React.FC = () => {
       form.setFieldValue('priority', taskData.priority);
       form.setFieldValue('dueDate', taskData.dueDate ? new Date(taskData.dueDate).toISOString().slice(0, 10) : '');
       form.setFieldValue('projectId', String(taskData.projectId));
-      form.setFieldValue('assigneeId', String(taskData.assigneeId));
+      form.setFieldValue('assigneeId', taskData.assigneeId ? String(taskData.assigneeId) : '');
     }
   }, [taskData]);
 
@@ -183,9 +183,9 @@ const TaskForm: React.FC = () => {
 
               <form.Field name="assigneeId" children={(field) => (
                 <div>
-                  <label htmlFor="assigneeId" className="block mb-2 text-sm font-medium text-gray-900">Responsável</label>
+                  <label htmlFor="assigneeId" className="block mb-2 text-sm font-medium text-gray-900">Responsável (opcional)</label>
                   <select id="assigneeId" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" value={String(field.state.value ?? '')} onChange={(e) => field.handleChange(e.target.value)}>
-                    <option value="">Selecione...</option>
+                    <option value="">Sem responsável</option>
                     {(usersData ?? []).map((u) => (
                       <option key={u.id} value={u.id}>{u.name} ({roles[u.role]})</option>
                     ))}

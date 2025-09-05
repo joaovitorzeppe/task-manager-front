@@ -1,5 +1,10 @@
 import type { User } from "./user";
 
+export type ProjectMemberInput = {
+  userId: number;
+  role: "viewer" | "contributor" | "maintainer";
+};
+
 export type Project = {
   id: number;
   name: string;
@@ -9,6 +14,12 @@ export type Project = {
   endDate?: string | null;
   managerId: number;
   manager?: User;
+  members?: Array<{
+    id: number;
+    userId: number;
+    role: ProjectMemberInput["role"];
+    user?: User;
+  }>;
 };
 
 export type CreateProjectPayload = {
@@ -18,6 +29,7 @@ export type CreateProjectPayload = {
   startDate: string;
   endDate?: string | null;
   managerId: number;
+  members?: ProjectMemberInput[];
 };
 
 export type UpdateProjectPayload = Partial<CreateProjectPayload>;
