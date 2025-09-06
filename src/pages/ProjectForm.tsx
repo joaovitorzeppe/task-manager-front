@@ -1,4 +1,5 @@
 import React from 'react';
+import { Editor } from 'react-simple-wysiwyg';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from '@tanstack/react-form';
@@ -91,7 +92,7 @@ const ProjectForm: React.FC = () => {
     },
     validators: {
       onSubmit: z.object({
-        name: z.string().min(2, 'Nome é obrigatório'),
+        name: z.string().min(2, 'Nome é obrigatório').max(255, 'Nome deve ter no máximo 255 caracteres'),
         description: z.string(),
         status: z.enum(['planned', 'active', 'completed', 'cancelled']),
         startDate: z.string().min(1, 'Data de início é obrigatória'),
@@ -140,10 +141,11 @@ const ProjectForm: React.FC = () => {
             )} />
 
             <form.Field name="description" children={(field) => (
-              <>
-                <InputField type="text" label="Descrição" name="description" required={false} value={field.state.value ?? ''} onChange={(value) => field.handleChange(value)} />
+              <div>
+                <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
+                <Editor value={field.state.value ?? ''} onChange={(e) => field.handleChange(e.target.value)} />
                 <FieldInfo field={field} />
-              </>
+              </div>
             )} />
 
             <form.Field name="status" children={(field) => (

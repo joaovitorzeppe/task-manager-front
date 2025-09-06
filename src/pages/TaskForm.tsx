@@ -1,4 +1,5 @@
 import React from 'react';
+import { Editor } from 'react-simple-wysiwyg';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from '@tanstack/react-form';
@@ -85,7 +86,7 @@ const TaskForm: React.FC = () => {
     },
     validators: {
       onSubmit: z.object({
-        title: z.string().min(2, 'Título é obrigatório'),
+        title: z.string().min(2, 'Título é obrigatório').max(255, 'Título deve ter no máximo 255 caracteres'),
         description: z.string(),
         status: z.enum(['todo', 'in_progress', 'review', 'done']),
         priority: z.enum(['low', 'medium', 'high', 'critical']),
@@ -128,10 +129,11 @@ const TaskForm: React.FC = () => {
             )} />
 
             <form.Field name="description" children={(field) => (
-              <>
-                <InputField type="text" label="Descrição" name="description" required={false} value={field.state.value ?? ''} onChange={(value) => field.handleChange(value)} />
+              <div>
+                <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
+                <Editor value={field.state.value ?? ''} onChange={(e) => field.handleChange(e.target.value)} />
                 <FieldInfo field={field} />
-              </>
+              </div>
             )} />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
