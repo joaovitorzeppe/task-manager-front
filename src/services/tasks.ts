@@ -6,8 +6,24 @@ import type {
 } from "../types/task";
 import { API_URL } from "./config";
 
-const fetchTasks = async (token: string): Promise<Task[]> => {
-  const response = await fetch(`${API_URL}/tasks`, {
+const fetchTasks = async (
+  token: string,
+  filters?: Partial<{
+    projectId: number;
+    status: Task["status"];
+    assigneeId: number;
+    title: string;
+    priority: Task["priority"];
+  }>
+): Promise<Task[]> => {
+  const query = new URLSearchParams();
+  if (filters?.projectId) query.set("projectId", String(filters.projectId));
+  if (filters?.status) query.set("status", filters.status);
+  if (filters?.assigneeId) query.set("assigneeId", String(filters.assigneeId));
+  if (filters?.title) query.set("title", filters.title);
+  if (filters?.priority) query.set("priority", filters.priority);
+  const qs = query.toString();
+  const response = await fetch(`${API_URL}/tasks${qs ? `?${qs}` : ""}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

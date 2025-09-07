@@ -31,19 +31,26 @@ const DashboardLayout: React.FC = () => {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1">
-          {navigation
-            .filter((item) => !item.roles || item.roles.includes(user?.role as any))
-            .map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `rounded px-3 py-2 text-sm ${isActive ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+          {navigation.map((group) => {
+            const items = group.items.filter((item) => !item.roles || item.roles.includes(user?.role as any));
+            if (items.length === 0) return null;
+            return (
+              <div key={group.label} className="mb-4 flex flex-col">
+                <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{group.label}</div>
+                {items.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `rounded px-3 py-2 text-sm ${isActive ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
 
           <div className="flex-1" />
 
