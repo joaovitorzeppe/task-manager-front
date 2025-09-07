@@ -12,6 +12,7 @@ export type Task = {
   assigneeId?: number;
   project?: Project;
   assignee?: User;
+  comments?: TaskComment[];
 };
 
 export type CreateTaskPayload = {
@@ -25,6 +26,16 @@ export type CreateTaskPayload = {
 };
 
 export type UpdateTaskPayload = Partial<CreateTaskPayload>;
+
+export type TaskComment = {
+  id: number;
+  taskId: number;
+  authorId: number;
+  content: string; // HTML
+  createdAt: string;
+  updatedAt: string;
+  author?: User;
+};
 
 export const statuses = {
   todo: "A Fazer",

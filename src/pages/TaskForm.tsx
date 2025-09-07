@@ -8,10 +8,11 @@ import InputField from '../components/InputField';
 import Button from '../components/Button';
 import FieldInfo from '../components/FieldInfo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createTask, fetchTaskById, updateTask } from '../services/tasks';
+import { createTask, fetchTaskById, updateTask, fetchTaskComments, createTaskComment } from '../services/tasks';
 import { fetchProjects } from '../services/projects';
 import { fetchUsers } from '../services/users';
-import { type Task, type CreateTaskPayload, type UpdateTaskPayload, statuses, priorities } from '../types/task';
+import { type Task, type CreateTaskPayload, type UpdateTaskPayload, statuses, priorities, type TaskComment } from '../types/task';
+import DOMPurify from 'dompurify';
 import type { Project } from '../types/project';
 import { type User, roles } from '../types/user';
 
@@ -25,6 +26,12 @@ const TaskForm: React.FC = () => {
   const { data: taskData, isLoading: isFetchingTask } = useQuery<Task, Error>({
     queryKey: ['task', id],
     queryFn: () => fetchTaskById(token as string, Number(id)),
+    enabled: !!token && !!id,
+  });
+
+  const { data: commentsData, refetch: refetchComments, isFetching: isFetchingComments } = useQuery<TaskComment[], Error>({
+    queryKey: ['task', id, 'comments'],
+    queryFn: () => fetchTaskComments(token as string, Number(id)),
     enabled: !!token && !!id,
   });
 
@@ -53,6 +60,14 @@ const TaskForm: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       navigate('/dashboard/tasks');
+    },
+  });
+
+  const addCommentMutation = useMutation<TaskComment, Error, { id: number; content: string }>({
+    mutationFn: ({ id, content }) => createTaskComment(token as string, id, content),
+    onSuccess: () => {
+      refetchComments();
+      setNewComment('');
     },
   });
 
@@ -96,6 +111,8 @@ const TaskForm: React.FC = () => {
       }),
     },
   });
+
+  const [newComment, setNewComment] = React.useState<string>('');
 
   React.useEffect(() => {
     if (taskData) {
@@ -204,6 +221,45 @@ const TaskForm: React.FC = () => {
           </form>
         )}
       </div>
+      {isEdit && (
+        <div className="rounded-lg bg-white p-6 shadow space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Comentários</h2>
+          <div className="space-y-3">
+            {isFetchingComments ? (
+              <div>Carregando comentários...</div>
+            ) : (
+              (commentsData ?? []).length === 0 ? (
+                <div className="text-sm text-gray-500">Sem comentários ainda.</div>
+              ) : (
+                <ul className="space-y-3">
+                  {(commentsData ?? []).map((c) => (
+                    <li key={c.id} className="border rounded p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-700">{c.author?.name ?? `Usuário #${c.authorId}`}</span>
+                        <span className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString()}</span>
+                      </div>
+                      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(c.content) }} />
+                    </li>
+                  ))}
+                </ul>
+              )
+            )}
+          </div>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900">Novo comentário</label>
+            <Editor value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              label={addCommentMutation.isPending ? 'Adicionando...' : 'Adicionar comentário'}
+              onClick={() => addCommentMutation.mutate({ id: Number(id), content: newComment })}
+              type="button"
+              disabled={addCommentMutation.isPending || !newComment.trim()}
+              loading={addCommentMutation.isPending}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
