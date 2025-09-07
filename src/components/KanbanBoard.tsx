@@ -11,6 +11,13 @@ type KanbanBoardProps = {
 
 const statusOrder: Array<Task['status']> = ['todo', 'in_progress', 'review', 'done'];
 
+const priorityRank: Record<Task['priority'], number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
 const statusBg: Record<Task['status'], string> = {
   todo: 'bg-gray-50',
   in_progress: 'bg-blue-50',
@@ -63,6 +70,14 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
     for (const t of tasks) {
       map[t.status].push(t);
     }
+    statusOrder.forEach((s) => {
+      map[s] = map[s].slice().sort((a, b) => {
+        if (a.priority === b.priority) {
+          return new Date(b.dueDate ?? '')?.getTime() - new Date(a.dueDate ?? '')?.getTime();
+        };
+        return priorityRank[b.priority] - priorityRank[a.priority]
+      });
+    });
     return map;
   }, [tasks]);
 
