@@ -9,6 +9,7 @@ import UserForm from '../pages/UserForm';
 import ProjectForm from '../pages/ProjectForm';
 import TaskForm from '../pages/TaskForm';
 import Kanban from '../pages/Kanban';
+import Charts from '../pages/Charts';
 import type { User } from '../types/user';
 
 export type AppRoute = {
@@ -32,6 +33,7 @@ const routes: AppRoute[] = [
       { path: '/dashboard/projects/form', element: <ProjectForm />, roles: ['admin', 'manager'] },
       { path: '/dashboard/projects/form/:id', element: <ProjectForm />, roles: ['admin', 'manager'] },
       { path: '/dashboard/kanban', element: <Kanban />, roles: ['admin', 'manager', 'developer'] },
+      { path: '/dashboard/charts', element: <Charts />, roles: ['admin', 'manager', 'developer'] },
       { path: '/dashboard/tasks', element: <Tasks /> },
       { path: '/dashboard/tasks/form', element: <TaskForm />, roles: ['admin', 'manager'] },
       { path: '/dashboard/tasks/form/:id', element: <TaskForm />, roles: ['admin', 'manager'] },

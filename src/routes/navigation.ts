@@ -14,6 +14,11 @@ const navigation: NavGroup[] = [
     label: "Dashboards",
     items: [
       {
+        label: "Gráficos",
+        path: "/dashboard/charts",
+        roles: ["admin", "manager", "developer"],
+      },
+      {
         label: "Kanban",
         path: "/dashboard/kanban",
         roles: ["admin", "manager", "developer"],

@@ -14,6 +14,8 @@ const fetchTasks = async (
     assigneeId: number;
     title: string;
     priority: Task["priority"];
+    dueDateFrom: string;
+    dueDateTo: string;
   }>
 ): Promise<Task[]> => {
   const query = new URLSearchParams();
@@ -22,6 +24,8 @@ const fetchTasks = async (
   if (filters?.assigneeId) query.set("assigneeId", String(filters.assigneeId));
   if (filters?.title) query.set("title", filters.title);
   if (filters?.priority) query.set("priority", filters.priority);
+  if (filters?.dueDateFrom) query.set("dueDateFrom", filters.dueDateFrom);
+  if (filters?.dueDateTo) query.set("dueDateTo", filters.dueDateTo);
   const qs = query.toString();
   const response = await fetch(`${API_URL}/tasks${qs ? `?${qs}` : ""}`, {
     headers: {
