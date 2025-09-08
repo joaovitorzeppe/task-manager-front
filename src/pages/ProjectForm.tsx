@@ -1,5 +1,5 @@
 import React from 'react';
-import { Editor } from 'react-simple-wysiwyg';
+import { DefaultEditor } from 'react-simple-wysiwyg';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from '@tanstack/react-form';
@@ -143,7 +143,7 @@ const ProjectForm: React.FC = () => {
             <form.Field name="description" children={(field) => (
               <div>
                 <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
-                <Editor value={field.state.value ?? ''} onChange={(e) => field.handleChange(e.target.value)} />
+                <DefaultEditor value={field.state.value ?? ''} onChange={(e) => field.handleChange(e.target.value)} />
                 <FieldInfo field={field} />
               </div>
             )} />

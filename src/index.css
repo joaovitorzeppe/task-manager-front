@@ -19,3 +19,17 @@
   
   flex: 1;
 }
+
+/* Editor (react-simple-wysiwyg): forçar textos e ícones em preto */
+.rsw-editor .rsw-toolbar,
+.rsw-editor .rsw-toolbar * {
+  color: #111827 !important; /* gray-900 */
+}
+.rsw-editor .rsw-btn svg,
+.rsw-editor .rsw-toolbar svg {
+  fill: #111827 !important;
+  stroke: #111827 !important;
+}
+.rsw-editor .rsw-ce {
+  color: #111827 !important;
+}

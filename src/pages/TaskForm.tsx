@@ -1,5 +1,5 @@
 import React from 'react';
-import { Editor } from 'react-simple-wysiwyg';
+import { DefaultEditor } from 'react-simple-wysiwyg';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from '@tanstack/react-form';
@@ -148,7 +148,7 @@ const TaskForm: React.FC = () => {
             <form.Field name="description" children={(field) => (
               <div>
                 <label htmlFor="description" className="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
-                <Editor value={field.state.value ?? ''} onChange={(e) => field.handleChange(e.target.value)} />
+                  <DefaultEditor value={field.state.value ?? ''} onChange={(e) => field.handleChange(e.target.value)} />
                 <FieldInfo field={field} />
               </div>
             )} />
@@ -238,7 +238,7 @@ const TaskForm: React.FC = () => {
                         <span className="text-sm text-gray-700">{c.author?.name ?? `Usuário #${c.authorId}`}</span>
                         <span className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString()}</span>
                       </div>
-                      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(c.content) }} />
+                      <div className="prose max-w-none text-gray-900" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(c.content) }} />
                     </li>
                   ))}
                 </ul>
@@ -247,7 +247,7 @@ const TaskForm: React.FC = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900">Novo comentário</label>
-            <Editor value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+              <DefaultEditor value={newComment} onChange={(e) => setNewComment(e.target.value)} />
           </div>
           <div className="flex items-center gap-2">
             <Button
