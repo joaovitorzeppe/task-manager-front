@@ -15,6 +15,10 @@ import { type Task, type CreateTaskPayload, type UpdateTaskPayload, statuses, pr
 import DOMPurify from 'dompurify';
 import type { Project } from '../types/project';
 import { type User, roles } from '../types/user';
+import { listTaskAttachments, uploadTaskAttachment, listTaskCommentAttachments, uploadTaskCommentAttachment, toAbsoluteUrl, type Attachment, deleteTaskAttachment, deleteTaskCommentAttachment } from '../services/attachments';
+import DownloadIcon from '../assets/svgs/download-svgrepo-com.svg';
+import TrashIcon from '../assets/svgs/trash-svgrepo-com.svg';
+import UploadButton from '../components/UploadButton';
 
 const TaskForm: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -128,6 +132,12 @@ const TaskForm: React.FC = () => {
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
+  const { data: taskAttachments = [], refetch: refetchTaskAttachments } = useQuery<Attachment[], Error>({
+    queryKey: ['task', id, 'attachments'],
+    queryFn: () => listTaskAttachments(token as string, Number(id)),
+    enabled: !!token && !!id,
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -223,6 +233,38 @@ const TaskForm: React.FC = () => {
       </div>
       {isEdit && (
         <div className="rounded-lg bg-white p-6 shadow space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Anexos da Tarefa</h2>
+          <UploadButton
+            accept='image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            onFile={async (file) => {
+              await uploadTaskAttachment(token as string, Number(id), file);
+              refetchTaskAttachments();
+            }}
+          />
+          {(taskAttachments ?? []).length === 0 ? (
+            <div className="text-sm text-gray-500">Nenhum anexo.</div>
+          ) : (
+            <ul className="space-y-2">
+              {taskAttachments.map((a) => (
+                <li key={a.id} className="flex items-center justify-between rounded border p-2">
+                  <span className="text-sm text-gray-800 truncate mr-3">{a.filename}</span>
+                  <div className="flex items-center gap-2">
+                    <a title="Baixar" href={toAbsoluteUrl(a.url)} target="_blank" rel="noreferrer" className="rounded p-1 hover:bg-gray-100">
+                      <img src={DownloadIcon} alt="Baixar" className="h-5 w-5" />
+                    </a>
+                    <button title="Excluir" className="rounded p-1 hover:bg-gray-100" onClick={async () => {
+                      if (!confirm('Excluir anexo?')) return;
+                      await deleteTaskAttachment(token as string, Number(id), a.id);
+                      refetchTaskAttachments();
+                    }}>
+                      <img src={TrashIcon} alt="Excluir" className="h-5 w-5" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
           <h2 className="text-xl font-semibold text-gray-900">Comentários</h2>
           <div className="space-y-3">
             {isFetchingComments ? (
@@ -233,12 +275,13 @@ const TaskForm: React.FC = () => {
               ) : (
                 <ul className="space-y-3">
                   {(commentsData ?? []).map((c) => (
-                    <li key={c.id} className="border rounded p-3">
+                    <li key={c.id} className="border rounded p-3 space-y-2">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-700">{c.author?.name ?? `Usuário #${c.authorId}`}</span>
                         <span className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString()}</span>
                       </div>
                       <div className="prose max-w-none text-gray-900" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(c.content) }} />
+                      <CommentAttachments taskId={Number(id)} commentId={c.id} token={token as string} />
                     </li>
                   ))}
                 </ul>
@@ -265,5 +308,50 @@ const TaskForm: React.FC = () => {
 };
 
 export default TaskForm;
+
+const CommentAttachments: React.FC<{ taskId: number; commentId: number; token: string }> = ({ taskId, commentId, token }) => {
+  const { data: commentAttachments = [], refetch } = useQuery<Attachment[], Error>({
+    queryKey: ['task', taskId, 'comments', commentId, 'attachments'],
+    queryFn: () => listTaskCommentAttachments(token, taskId, commentId),
+    enabled: !!token && !!taskId && !!commentId,
+  });
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <UploadButton
+          accept='image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          onFile={async (file) => {
+            await uploadTaskCommentAttachment(token, taskId, commentId, file);
+            refetch();
+          }}
+        />
+      </div>
+      {(commentAttachments ?? []).length === 0 ? (
+        <div className="text-xs text-gray-500">Sem anexos.</div>
+      ) : (
+        <ul className="space-y-1">
+          {commentAttachments.map((a) => (
+            <li key={a.id} className="flex items-center justify-between rounded border p-2">
+              <span className="text-sm text-gray-800 truncate mr-3">{a.filename}</span>
+              <div className="flex items-center gap-2">
+                <a title="Baixar" href={toAbsoluteUrl(a.url)} target="_blank" rel="noreferrer" className="rounded p-1 hover:bg-gray-100">
+                  <img src={DownloadIcon} alt="Baixar" className="h-5 w-5" />
+                </a>
+                <button title="Excluir" className="rounded p-1 hover:bg-gray-100" onClick={async () => {
+                  if (!confirm('Excluir anexo?')) return;
+                  await deleteTaskCommentAttachment(token, taskId, commentId, a.id);
+                  refetch();
+                }}>
+                  <img src={TrashIcon} alt="Excluir" className="h-5 w-5" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 

@@ -12,6 +12,10 @@ import { createProject, fetchProjectById, updateProject } from '../services/proj
 import { fetchUsers } from '../services/users';
 import { statuses, type Project, type CreateProjectPayload, type UpdateProjectPayload } from '../types/project';
 import { type User, roles } from '../types/user';
+import { listProjectAttachments, uploadProjectAttachment, toAbsoluteUrl, type Attachment, deleteProjectAttachment } from '../services/attachments';
+import DownloadIcon from '../assets/svgs/download-svgrepo-com.svg';
+import TrashIcon from '../assets/svgs/trash-svgrepo-com.svg';
+import UploadButton from '../components/UploadButton';
 import dayjs from 'dayjs';
 
 const ProjectForm: React.FC = () => {
@@ -107,6 +111,12 @@ const ProjectForm: React.FC = () => {
   };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  const { data: attachments = [], refetch: refetchAttachments } = useQuery<Attachment[], Error>({
+    queryKey: ['project', id, 'attachments'],
+    queryFn: () => listProjectAttachments(token as string, Number(id)),
+    enabled: !!token && !!id,
+  });
 
   React.useEffect(() => {
     if (!projectData) return;
@@ -283,6 +293,42 @@ const ProjectForm: React.FC = () => {
           </form>
         )}
       </div>
+
+      {isEdit && (
+        <div className="rounded-lg bg-white p-6 shadow space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Anexos</h2>
+          <UploadButton
+            accept='image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            onFile={async (file) => {
+              await uploadProjectAttachment(token as string, Number(id), file);
+              refetchAttachments();
+            }}
+          />
+          {(attachments ?? []).length === 0 ? (
+            <div className="text-sm text-gray-500">Nenhum anexo enviado.</div>
+          ) : (
+            <ul className="space-y-2">
+              {attachments.map((a) => (
+                <li key={a.id} className="flex items-center justify-between rounded border p-2">
+                  <span className="text-sm text-gray-800 truncate mr-3">{a.filename}</span>
+                  <div className="flex items-center gap-2">
+                    <a title="Baixar" href={toAbsoluteUrl(a.url)} target="_blank" rel="noreferrer" className="rounded p-1 hover:bg-gray-100">
+                      <img src={DownloadIcon} alt="Baixar" className="h-5 w-5" />
+                    </a>
+                    <button title="Excluir" className="rounded p-1 hover:bg-gray-100" onClick={async () => {
+                      if (!confirm('Excluir anexo?')) return;
+                      await deleteProjectAttachment(token as string, Number(id), a.id);
+                      refetchAttachments();
+                    }}>
+                      <img src={TrashIcon} alt="Excluir" className="h-5 w-5" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 };
