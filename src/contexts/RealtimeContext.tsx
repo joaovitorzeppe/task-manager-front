@@ -43,6 +43,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
-export const useRealtime = () => useContext(RealtimeContext);
+export const useRealtime = () => {
+  const context = useContext(RealtimeContext);
+  if (context === undefined) {
+    throw new Error('useRealtime deve ser usado dentro de um RealtimeProvider');
+  }
+  return context;
+}
 
 
