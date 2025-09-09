@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { DefaultEditor } from 'react-simple-wysiwyg';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -39,8 +39,8 @@ const ProjectForm: React.FC = () => {
 
   const managers = (usersData ?? []).filter((u) => ['admin', 'manager'].includes(u.role));
 
-  const [members, setMembers] = React.useState<Array<{ userId: number; role: 'viewer' | 'contributor' | 'maintainer'; manager?: boolean }>>([]);
-  const [selectedToAdd, setSelectedToAdd] = React.useState<string>('');
+  const [members, setMembers] = useState<Array<{ userId: number; role: 'viewer' | 'contributor' | 'maintainer'; manager?: boolean }>>([]);
+  const [selectedToAdd, setSelectedToAdd] = useState<string>('');
 
   const addSelectedMember = () => {
     if (!selectedToAdd) return;
@@ -118,7 +118,7 @@ const ProjectForm: React.FC = () => {
     enabled: !!token && !!id,
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!projectData) return;
 
     form.setFieldValue('name', projectData.name);

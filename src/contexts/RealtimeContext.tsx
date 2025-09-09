@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { API_URL } from '../services/config';
@@ -12,7 +12,7 @@ const RealtimeContext = createContext<RealtimeContextType>({ socket: null });
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
 
-  const [socket, setSocket] = React.useState<Socket | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     const s = io(API_URL, {

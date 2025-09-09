@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { DefaultEditor } from 'react-simple-wysiwyg';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,6 +19,51 @@ import { listTaskAttachments, uploadTaskAttachment, listTaskCommentAttachments, 
 import DownloadIcon from '../assets/svgs/download-svgrepo-com.svg';
 import TrashIcon from '../assets/svgs/trash-svgrepo-com.svg';
 import UploadButton from '../components/UploadButton';
+
+const CommentAttachments: React.FC<{ taskId: number; commentId: number; token: string }> = ({ taskId, commentId, token }) => {
+  const { data: commentAttachments = [], refetch } = useQuery<Attachment[], Error>({
+    queryKey: ['task', taskId, 'comments', commentId, 'attachments'],
+    queryFn: () => listTaskCommentAttachments(token, taskId, commentId),
+    enabled: !!token && !!taskId && !!commentId,
+  });
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <UploadButton
+          accept='image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          onFile={async (file) => {
+            await uploadTaskCommentAttachment(token, taskId, commentId, file);
+            refetch();
+          }}
+        />
+      </div>
+      {(commentAttachments ?? []).length === 0 ? (
+        <div className="text-xs text-gray-500">Sem anexos.</div>
+      ) : (
+        <ul className="space-y-1">
+          {commentAttachments.map((a) => (
+            <li key={a.id} className="flex items-center justify-between rounded border p-2">
+              <span className="text-sm text-gray-800 truncate mr-3">{a.filename}</span>
+              <div className="flex items-center gap-2">
+                <a title="Baixar" href={toAbsoluteUrl(a.url)} target="_blank" rel="noreferrer" className="rounded p-1 hover:bg-gray-100">
+                  <img src={DownloadIcon} alt="Baixar" className="h-5 w-5" />
+                </a>
+                <button title="Excluir" className="rounded p-1 hover:bg-gray-100" onClick={async () => {
+                  if (!confirm('Excluir anexo?')) return;
+                  await deleteTaskCommentAttachment(token, taskId, commentId, a.id);
+                  refetch();
+                }}>
+                  <img src={TrashIcon} alt="Excluir" className="h-5 w-5" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const TaskForm: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -116,9 +161,9 @@ const TaskForm: React.FC = () => {
     },
   });
 
-  const [newComment, setNewComment] = React.useState<string>('');
+  const [newComment, setNewComment] = useState<string>('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (taskData) {
       form.setFieldValue('title', taskData.title);
       form.setFieldValue('description', taskData.description ?? '');
@@ -308,50 +353,3 @@ const TaskForm: React.FC = () => {
 };
 
 export default TaskForm;
-
-const CommentAttachments: React.FC<{ taskId: number; commentId: number; token: string }> = ({ taskId, commentId, token }) => {
-  const { data: commentAttachments = [], refetch } = useQuery<Attachment[], Error>({
-    queryKey: ['task', taskId, 'comments', commentId, 'attachments'],
-    queryFn: () => listTaskCommentAttachments(token, taskId, commentId),
-    enabled: !!token && !!taskId && !!commentId,
-  });
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <UploadButton
-          accept='image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          onFile={async (file) => {
-            await uploadTaskCommentAttachment(token, taskId, commentId, file);
-            refetch();
-          }}
-        />
-      </div>
-      {(commentAttachments ?? []).length === 0 ? (
-        <div className="text-xs text-gray-500">Sem anexos.</div>
-      ) : (
-        <ul className="space-y-1">
-          {commentAttachments.map((a) => (
-            <li key={a.id} className="flex items-center justify-between rounded border p-2">
-              <span className="text-sm text-gray-800 truncate mr-3">{a.filename}</span>
-              <div className="flex items-center gap-2">
-                <a title="Baixar" href={toAbsoluteUrl(a.url)} target="_blank" rel="noreferrer" className="rounded p-1 hover:bg-gray-100">
-                  <img src={DownloadIcon} alt="Baixar" className="h-5 w-5" />
-                </a>
-                <button title="Excluir" className="rounded p-1 hover:bg-gray-100" onClick={async () => {
-                  if (!confirm('Excluir anexo?')) return;
-                  await deleteTaskCommentAttachment(token, taskId, commentId, a.id);
-                  refetch();
-                }}>
-                  <img src={TrashIcon} alt="Excluir" className="h-5 w-5" />
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
-
-

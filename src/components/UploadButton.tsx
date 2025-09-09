@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 type UploadButtonProps = {
   accept?: string;
@@ -9,9 +9,9 @@ type UploadButtonProps = {
 };
 
 const UploadButton: React.FC<UploadButtonProps> = ({ accept, disabled, className, label = 'Selecionar arquivo', onFile }) => {
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const [fileName, setFileName] = React.useState<string>('');
-  const [isBusy, setIsBusy] = React.useState<boolean>(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [fileName, setFileName] = useState<string>('');
+  const [isBusy, setIsBusy] = useState<boolean>(false);
 
   const handleClick = () => {
     if (disabled || isBusy) return;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from '@tanstack/react-form';
@@ -77,7 +77,7 @@ const UserForm: React.FC = () => {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (userData) {
       form.setFieldValue('name', userData.name);
       form.setFieldValue('email', userData.email);

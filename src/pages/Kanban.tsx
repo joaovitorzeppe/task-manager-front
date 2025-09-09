@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import KanbanBoard from '../components/KanbanBoard';
@@ -9,7 +9,7 @@ import type { Project } from '../types/project';
 
 const Kanban: React.FC = () => {
   const { token } = useAuth();
-  const [projectId, setProjectId] = React.useState<number | 'all'>('all');
+  const [projectId, setProjectId] = useState<number | 'all'>('all');
 
   const { data: tasks, isLoading, isError, error } = useQuery<Task[], Error>({
     queryKey: ['tasks', projectId],

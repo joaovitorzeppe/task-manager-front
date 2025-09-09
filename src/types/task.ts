@@ -31,7 +31,7 @@ export type TaskComment = {
   id: number;
   taskId: number;
   authorId: number;
-  content: string; // HTML
+  content: string;
   createdAt: string;
   updatedAt: string;
   author?: User;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Task } from '../types/task';
@@ -35,8 +35,8 @@ const priorityDot: Record<Task['priority'], string> = {
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
   const { token } = useAuth();
   const queryClient = useQueryClient();
-  const [draggingId, setDraggingId] = React.useState<number | null>(null);
-  const [overStatus, setOverStatus] = React.useState<Task['status'] | null>(null);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [overStatus, setOverStatus] = useState<Task['status'] | null>(null);
 
   const mutation = useMutation({
     mutationFn: async (params: { id: number; status: Task['status'] }) => {
@@ -60,7 +60,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
     },
   });
 
-  const grouped = React.useMemo(() => {
+  const grouped = useMemo(() => {
     const map: Record<Task['status'], Task[]> = {
       todo: [],
       in_progress: [],
