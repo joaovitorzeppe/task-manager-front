@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Task } from '../types/task';
 import { statuses } from '../types/task';
 import { updateTask } from '../services/tasks';
+import editIcon from '../assets/svgs/pencil-svgrepo-com.svg';
 
 type KanbanBoardProps = {
   tasks: Task[];
@@ -34,6 +36,7 @@ const priorityDot: Record<Task['priority'], string> = {
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [overStatus, setOverStatus] = useState<Task['status'] | null>(null);
@@ -149,6 +152,18 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks }) => {
                       <span>
                         {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Sem prazo'}
                       </span>
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/dashboard/tasks/form/${task.id}`);
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                        title="Editar tarefa"
+                      >
+                        <img src={editIcon} alt="Editar" className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
