@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchProjects } from '../services/projects';
 import { fetchTasks } from '../services/tasks';
@@ -16,6 +16,7 @@ import {
 import { Pie, Bar } from 'react-chartjs-2';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
+import { useQuery } from '@tanstack/react-query';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
@@ -45,7 +46,6 @@ function isoEndOfDay(dateStr?: string) {
 const Charts: React.FC = () => {
   const { token } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [projectId, setProjectId] = useState<number | undefined>(undefined);
 
   const { start, end } = useMemo(() => monthBounds(), []);
@@ -57,16 +57,19 @@ const Charts: React.FC = () => {
     fetchProjects(token).then(setProjects).catch(() => setProjects([]));
   }, [token]);
 
-  useEffect(() => {
-    if (!token) return;
-    const filters: any = {};
-    const fromISO = isoStartOfDay(startDate);
-    const toISO = isoEndOfDay(endDate);
-    if (fromISO) filters.dueDateFrom = fromISO;
-    if (toISO) filters.dueDateTo = toISO;
-    if (projectId) filters.projectId = projectId;
-    fetchTasks(token, filters).then(setTasks).catch(() => setTasks([]));
-  }, [token, projectId, startDate, endDate]);
+  const { data: tasks = [] } = useQuery<Task[], Error>({
+    queryKey: ['tasks', projectId ?? 'all', startDate, endDate],
+    queryFn: () => {
+      const filters: any = {};
+      const fromISO = isoStartOfDay(startDate);
+      const toISO = isoEndOfDay(endDate);
+      if (fromISO) filters.dueDateFrom = fromISO;
+      if (toISO) filters.dueDateTo = toISO;
+      if (projectId) filters.projectId = projectId;
+      return fetchTasks(token as string, filters);
+    },
+    enabled: !!token,
+  });
 
   const pieData = useMemo(() => {
     const counts: Record<string, number> = { todo: 0, in_progress: 0, review: 0, done: 0 };
